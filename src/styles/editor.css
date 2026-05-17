@@ -1,0 +1,316 @@
+.milkdown {
+  --crepe-color-background: var(--editor-writing-bg) !important;
+  --crepe-color-on-background: var(--text-main) !important;
+  --crepe-color-surface: var(--editor-writing-bg) !important;
+  --crepe-color-outline: var(--border-subtle) !important;
+  --crepe-color-primary: var(--accent) !important;
+  --crepe-color-secondary: var(--text-muted) !important;
+  --crepe-color-selected: var(--selection-bg) !important;
+  --crepe-color-hover: var(--button-hover) !important;
+  --crepe-color-error: var(--danger) !important;
+  --crepe-font-title: inherit;
+  --crepe-font-default: inherit;
+  --crepe-font-code: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas,
+    monospace;
+}
+
+/* Editor container */
+.editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--editor-bg);
+}
+
+.editor-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 24px;
+  background: var(--app-bg);
+}
+
+.editor-inner {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 0;
+  min-height: 100%;
+  background: var(--editor-writing-bg);
+}
+
+/* Override Crepe's default ProseMirror padding (60px 120px) for wider content */
+.milkdown .ProseMirror {
+  padding: 60px 60px;
+}
+
+/* Milkdown / ProseMirror overrides */
+.milkdown {
+  outline: none !important;
+  min-height: 100%;
+  position: relative;
+}
+
+/* Floating toolbar — lightweight bubble style */
+.milkdown .milkdown-toolbar {
+  z-index: 100;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px 6px;
+  background: var(--toolbar-bg, rgba(255, 255, 255, 0.92));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.milkdown .milkdown-toolbar .divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+  background: rgba(128, 128, 128, 0.15);
+  flex-shrink: 0;
+}
+
+.milkdown .milkdown-toolbar .toolbar-item {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  outline: none;
+  transition: background 0.12s ease;
+}
+
+.milkdown .milkdown-toolbar .toolbar-item:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.milkdown .milkdown-toolbar .toolbar-item:active {
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.milkdown .milkdown-toolbar .toolbar-item svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+  fill: var(--text-muted);
+  display: block;
+}
+
+.milkdown .milkdown-toolbar .toolbar-item.active svg {
+  color: var(--accent);
+  fill: var(--accent);
+}
+
+.milkdown .milkdown-toolbar .toolbar-item[disabled] svg {
+  opacity: 0.3;
+}
+
+.ProseMirror {
+  outline: none !important;
+  min-height: 100%;
+  user-select: text;
+  cursor: text;
+}
+
+.ProseMirror h1 {
+  font-size: 1.8em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.2em 0 0.4em 0;
+  padding-bottom: 0.15em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1em 0 0.35em 0;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.8em 0 0.3em 0;
+}
+
+.ProseMirror h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.6em 0 0.25em 0;
+}
+
+.ProseMirror p {
+  line-height: 1.75;
+  margin: 0.4em 0;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.4em 0;
+}
+
+.ProseMirror li {
+  margin: 0.2em 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.3em 1em;
+  margin: 0.5em 0;
+  color: var(--text-muted);
+  background: var(--button-hover);
+  border-radius: 0 4px 4px 0;
+}
+
+.ProseMirror code {
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--kbd-bg);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+
+.ProseMirror pre {
+  background: var(--kbd-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 1em;
+  margin: 0.6em 0;
+  overflow-x: auto;
+}
+
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.6em 0;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid var(--border-subtle);
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+
+.ProseMirror th {
+  background: var(--button-hover);
+  font-weight: 600;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 1.5em 0;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.ProseMirror a {
+  cursor: pointer;
+}
+
+/* Math formula */
+.ProseMirror .math-display {
+  text-align: center;
+  margin: 0.8em 0;
+  overflow-x: auto;
+}
+
+.ProseMirror .math-inline {
+  display: inline;
+}
+
+/* KaTeX */
+.katex-display {
+  margin: 0.5em 0 !important;
+}
+
+/* Source editor */
+.source-editor {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text-main);
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 32px 0 64px 0;
+  tab-size: 2;
+  user-select: text;
+  cursor: text;
+}
+
+.source-editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 24px;
+  background: var(--app-bg);
+}
+
+.source-editor-inner {
+  flex: 1;
+  max-width: 1050px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+  background: var(--editor-writing-bg);
+  padding: 0 60px;
+}
+
+/* Empty state */
+.editor-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.1em;
+  opacity: 0.6;
+}
+
+/* CodeMirror editor chrome — use our design tokens */
+.cm-editor {
+  background: var(--kbd-bg) !important;
+}
+
+.cm-editor .cm-content {
+  caret-color: var(--text-main);
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+}
+
+.cm-editor .cm-gutters {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: none !important;
+}

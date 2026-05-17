@@ -1,0 +1,44 @@
+:root,
+[data-theme='light'] {
+  --app-bg: #ffffff;
+  --editor-bg: #ffffff;
+  --editor-writing-bg: #ffffff;
+  --titlebar-bg: #ffffff;
+  --outline-bg: #ffffff;
+  --text-main: #242424;
+  --text-muted: #777;
+  --border-subtle: rgba(0, 0, 0, 0.07);
+  --button-hover: rgba(0, 0, 0, 0.055);
+  --accent: #4a7cff;
+  --accent-hover: #3a66d8;
+  --danger: #e74c3c;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --selection-bg: rgba(74, 124, 255, 0.2);
+  --kbd-bg: rgba(0, 0, 0, 0.05);
+  --warning-bg: rgba(231, 76, 60, 0.08);
+  --warning-border: rgba(231, 76, 60, 0.3);
+  --toolbar-bg: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='dark'] {
+  --app-bg: #1f1f1f;
+  --editor-bg: #1f1f1f;
+  --editor-writing-bg: #1f1f1f;
+  --titlebar-bg: #1f1f1f;
+  --outline-bg: #1f1f1f;
+  --text-main: #e8e8e8;
+  --text-muted: #aaa;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --button-hover: rgba(255, 255, 255, 0.08);
+  --accent: #6b9aff;
+  --accent-hover: #5584e0;
+  --danger: #e74c3c;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
+  --selection-bg: rgba(107, 154, 255, 0.3);
+  --kbd-bg: rgba(255, 255, 255, 0.08);
+  --warning-bg: rgba(231, 76, 60, 0.12);
+  --warning-border: rgba(231, 76, 60, 0.35);
+  --toolbar-bg: rgba(40, 40, 40, 0.92);
+}
