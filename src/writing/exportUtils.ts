@@ -233,11 +233,70 @@ export async function exportProject(options: ExportOptions): Promise<void> {
 /**
  * Open HTML in a new window and trigger the print dialog for "Save as PDF".
  * In Tauri, the webview's print dialog includes a "Save as PDF" option.
+ *
+ * Uses a hidden iframe in Tauri to avoid popup blockers, and falls back
+ * to window.open() in regular browser environments.
  */
 async function printToPdf(html: string, _title: string): Promise<void> {
+  if (isTauri) {
+    // Tauri: use a hidden iframe to avoid popup blockers
+    await printInIframe(html);
+  } else {
+    // Browser: open a new popup window
+    await printInPopup(html);
+  }
+}
+
+/**
+ * Print HTML via a hidden iframe (works in Tauri where popups are blocked).
+ */
+async function printInIframe(html: string): Promise<void> {
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = 'none';
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
+  if (!iframeDoc) {
+    document.body.removeChild(iframe);
+    throw new Error('Could not create print frame.');
+  }
+
+  iframeDoc.open();
+  iframeDoc.write(html);
+  iframeDoc.close();
+
+  // Wait for content to render
+  await new Promise<void>((resolve) => {
+    iframe.onload = () => {
+      iframe.contentWindow?.print();
+      resolve();
+    };
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      resolve();
+    }, 500);
+  });
+
+  // Clean up after print dialog closes
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+  }, 1000);
+}
+
+/**
+ * Print HTML via a new browser popup window.
+ */
+async function printInPopup(html: string): Promise<void> {
   const printWindow = window.open('', '_blank', 'width=800,height=600');
   if (!printWindow) {
-    throw new Error('Could not open print window. Please allow popups for PDF export.');
+    throw new Error(
+      'Could not open print window. Please allow popups for PDF export.',
+    );
   }
 
   printWindow.document.write(html);
