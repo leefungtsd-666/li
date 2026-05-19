@@ -14,6 +14,7 @@ export function OutlineItemComponent({ item, isActive, onClick }: OutlineItemPro
       className={`outline-item ${levelClass}${isActive ? ' active' : ''}`}
       onClick={() => onClick(item)}
       title={item.text}
+      aria-current={isActive ? 'true' : undefined}
     >
       {item.text}
     </button>

@@ -1,0 +1,301 @@
+/* ---- Writing Sidebar ---- */
+
+.writing-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--sidebar-bg, var(--titlebar-bg));
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+.writing-sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.writing-sidebar-tab {
+  flex: 1;
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.writing-sidebar-tab:hover {
+  color: var(--text-main);
+}
+
+.writing-sidebar-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.writing-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.writing-list-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+
+.writing-list-item:hover {
+  background: var(--button-hover);
+}
+
+.writing-list-item.active {
+  background: var(--button-hover);
+  border-left-color: var(--accent);
+}
+
+.writing-list-item-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.writing-list-item-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.writing-list-item-actions {
+  display: none;
+  gap: 2px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.writing-list-item:hover .writing-list-item-actions {
+  display: flex;
+}
+
+/* ---- Empty state ---- */
+
+.writing-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---- Inline editing ---- */
+
+.writing-inline-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--text-main);
+  font-size: 13px;
+  padding: 2px 4px;
+  outline: none;
+}
+
+/* ---- Sidebar header actions ---- */
+
+.writing-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.writing-sidebar-header-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.writing-sidebar-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.writing-sidebar-btn:hover {
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+/* ---- Project Selector ---- */
+
+.project-selector-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.project-selector-dialog {
+  background: var(--titlebar-bg);
+  border-radius: 10px;
+  padding: 24px;
+  min-width: 380px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.project-selector-dialog h2 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.project-selector-field {
+  margin-bottom: 12px;
+}
+
+.project-selector-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.project-selector-field input,
+.project-selector-field textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--app-bg);
+  color: var(--text-main);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.project-selector-field textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.project-selector-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ---- Word Count Progress ---- */
+
+.wordcount-progress {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.wordcount-progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.wordcount-progress-bar {
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.wordcount-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ---- Character / World Note Editor ---- */
+
+.writing-editor-panel {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.writing-editor-panel input,
+.writing-editor-panel textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--app-bg);
+  color: var(--text-main);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.writing-editor-panel textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.writing-editor-panel .field-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.writing-editor-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* ---- Stats Panel ---- */
+
+.writing-stats-panel {
+  padding: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.writing-stats-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-main);
+  padding: 2px 0;
+}
+
+.writing-stats-label {
+  color: var(--text-muted);
+}

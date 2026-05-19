@@ -1,0 +1,46 @@
+/* Focus mode: dim everything outside the editor writing area */
+.focus-mode .writing-sidebar,
+.focus-mode .outline-panel,
+.focus-mode .format-toolbar {
+  opacity: 0.08;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Titlebar: dim but keep clickable (needed to exit focus mode) */
+.focus-mode .titlebar {
+  opacity: 0.15;
+  transition: opacity 0.3s ease;
+}
+
+/* On hover, temporarily reveal dimmed areas */
+.focus-mode .writing-sidebar:hover,
+.focus-mode .outline-panel:hover,
+.focus-mode .format-toolbar:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.focus-mode .titlebar:hover {
+  opacity: 1;
+}
+
+/* Focus mode status bar */
+.focus-mode .status-bar {
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.focus-mode .status-bar:hover {
+  opacity: 1;
+}
+
+/* Focus mode editor container gets extra padding for reading comfort */
+.focus-mode .editor-container {
+  background: var(--app-bg);
+}
+
+/* Smooth transition when entering/leaving focus mode */
+.focus-mode .editor-inner {
+  transition: padding 0.3s ease;
+}

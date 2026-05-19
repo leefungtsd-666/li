@@ -6,7 +6,7 @@ import { isTauri } from '../utils/platform.ts';
 
 let nextToken = 1;
 
-export function useDocumentState() {
+export function useDocumentState(onError?: (message: string) => void) {
   const [doc, setDoc] = useState<DocumentState>(EMPTY_DOCUMENT);
   const confirmCallbackRef = useRef<(() => void) | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -50,7 +50,7 @@ export function useDocumentState() {
 
   const saveAsDocument = useCallback(async (): Promise<boolean> => {
     if (!isTauri) {
-      console.warn('Cannot save in browser dev mode');
+      onError?.('File operations are not available in browser preview mode.');
       return false;
     }
     try {
@@ -69,14 +69,14 @@ export function useDocumentState() {
       }));
       return true;
     } catch (err) {
-      console.error('Failed to save file as:', err);
+      onError?.('Failed to save file. Check permissions and try again.');
       return false;
     }
-  }, [doc]);
+  }, [doc, onError]);
 
   const saveDocument = useCallback(async (): Promise<boolean> => {
     if (!isTauri) {
-      console.warn('Cannot save in browser dev mode');
+      onError?.('File operations are not available in browser preview mode.');
       return false;
     }
     try {
@@ -91,10 +91,10 @@ export function useDocumentState() {
       }
       return await saveAsDocument();
     } catch (err) {
-      console.error('Failed to save file:', err);
+      onError?.('Failed to save file. Check permissions and try again.');
       return false;
     }
-  }, [doc, saveAsDocument]);
+  }, [doc, saveAsDocument, onError]);
 
   const newDocument = useCallback(() => {
     checkDirtyAndProceed('new', () => {
@@ -107,7 +107,7 @@ export function useDocumentState() {
 
   const openDocument = useCallback(async () => {
     if (!isTauri) {
-      console.warn('Cannot open file in browser dev mode');
+      onError?.('File operations are not available in browser preview mode.');
       return;
     }
 
@@ -130,7 +130,7 @@ export function useDocumentState() {
         });
       } catch (err) {
         setDoc((prev) => ({ ...prev, isLoading: false }));
-        console.error('Failed to open file:', err);
+        onError?.('Could not open file. The file may not exist or is not a valid Markdown file.');
       }
     };
 
@@ -141,13 +141,36 @@ export function useDocumentState() {
     } else {
       await doOpen();
     }
-  }, [doc.isDirty]);
+  }, [doc.isDirty, onError]);
+
+  // Open a file directly by path (bypasses dialog, used by drag-drop and recent files)
+  const openDocumentAtPath = useCallback(async (filePath: string) => {
+    try {
+      setDoc((prev) => ({ ...prev, isLoading: true }));
+      const content = await readFile(filePath);
+      const parts = filePath.replace(/\\/g, '/').split('/');
+      const fileName = parts[parts.length - 1] || 'Untitled.md';
+      setDoc({
+        filePath,
+        fileName,
+        content,
+        savedContent: content,
+        isDirty: false,
+        isLoading: false,
+        fileToken: nextToken++,
+      });
+    } catch (err) {
+      setDoc((prev) => ({ ...prev, isLoading: false }));
+      onError?.('Could not open file. The file may not exist or is not a valid Markdown file.');
+    }
+  }, [onError]);
 
   return {
     doc,
     setContent,
     newDocument,
     openDocument,
+    openDocumentAtPath,
     saveDocument,
     saveAsDocument,
     showConfirm,

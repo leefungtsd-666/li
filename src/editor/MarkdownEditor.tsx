@@ -5,8 +5,28 @@ import { EditorView } from '@codemirror/view';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import katex from 'katex';
-import type { EditorController } from './editorTypes.ts';
+import type { EditorController, FindMatch } from './editorTypes.ts';
 import { DEBUG_EDITOR } from '../utils/debugFlags.ts';
+import { Decoration, DecorationSet } from '@milkdown/prose/view';
+import { Plugin, PluginKey } from '@milkdown/prose/state';
+import { TextSelection } from '@milkdown/prose/state';
+import { toggleMark, setBlockType, wrapIn } from '@milkdown/prose/commands';
+import { wrapInList } from '@milkdown/prose/schema-list';
+
+const findPluginKey = new PluginKey('find-highlight');
+
+// Module-level storage for find decorations (stateless plugin pattern).
+// Stateful plugins cannot be passed via editorViewOptionsCtx.plugins.
+let currentFindDecorations: DecorationSet = DecorationSet.empty;
+
+const findHighlightPlugin = new Plugin({
+  key: findPluginKey,
+  props: {
+    decorations() {
+      return currentFindDecorations;
+    },
+  },
+});
 
 // Custom syntax highlight colors for code blocks (replaces Crepe's default oneDark).
 // Fixes the issue where CodeMirror's defaultHighlightStyle colors strings/errors red.
@@ -83,7 +103,6 @@ export const MarkdownEditor = forwardRef<EditorController, MarkdownEditorProps>(
           contentRef.current = content;
           const crepe = crepeRef.current;
           if (!crepe) {
-            // Crepe not yet initialized — queue for later
             pendingContentRef.current = content;
             return;
           }
@@ -146,6 +165,287 @@ export const MarkdownEditor = forwardRef<EditorController, MarkdownEditorProps>(
           crepeRef.current = null;
           initializedRef.current = false;
         },
+
+        // ---- Find & Replace ----
+
+        getRenderedText: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return '';
+          try {
+            return crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              return view.state.doc.textBetween(0, view.state.doc.content.size);
+            });
+          } catch {
+            return '';
+          }
+        },
+        findAllMatches: (query: string): FindMatch[] => {
+          if (!query) return [];
+          const crepe = crepeRef.current;
+          if (!crepe) return [];
+          try {
+            return crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const text = view.state.doc.textBetween(0, view.state.doc.content.size);
+              const matches: FindMatch[] = [];
+              const lowerQuery = query.toLowerCase();
+              let pos = 0;
+              while (pos < text.length) {
+                const idx = text.toLowerCase().indexOf(lowerQuery, pos);
+                if (idx === -1) break;
+                matches.push({
+                  from: idx,
+                  to: idx + query.length,
+                  text: text.slice(idx, idx + query.length),
+                });
+                pos = idx + query.length;
+              }
+              return matches;
+            });
+          } catch {
+            return [];
+          }
+        },
+        selectRange: (from: number, to: number) => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const sel = TextSelection.create(view.state.doc, from, to);
+              view.dispatch(view.state.tr.setSelection(sel));
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        replaceCurrent: (replacement: string): boolean => {
+          const crepe = crepeRef.current;
+          if (!crepe) return false;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const { from, to } = view.state.selection;
+              if (from === to) return;
+              view.dispatch(view.state.tr.replaceWith(from, to, view.state.schema.text(replacement)));
+            });
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        replaceAllMatches: (query: string, replacement: string): number => {
+          const crepe = crepeRef.current;
+          if (!crepe) return 0;
+          try {
+            return crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const doc = view.state.doc;
+              const text = doc.textBetween(0, doc.content.size);
+              const lowerQuery = query.toLowerCase();
+              const matches: { from: number; to: number }[] = [];
+              let pos = 0;
+              while (pos < text.length) {
+                const idx = text.toLowerCase().indexOf(lowerQuery, pos);
+                if (idx === -1) break;
+                matches.push({ from: idx, to: idx + query.length });
+                pos = idx + query.length;
+              }
+              // Replace in reverse order to preserve positions
+              let tr = view.state.tr;
+              for (let i = matches.length - 1; i >= 0; i--) {
+                const m = matches[i];
+                tr = tr.replaceWith(m.from, m.to, view.state.schema.text(replacement));
+              }
+              view.dispatch(tr);
+              return matches.length;
+            });
+          } catch {
+            return 0;
+          }
+        },
+        highlightMatches: (matches: FindMatch[], activeIndex: number) => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const decorations = matches.map((m, i) =>
+                Decoration.inline(m.from, m.to, {
+                  class: i === activeIndex ? 'find-highlight-active' : 'find-highlight',
+                }),
+              );
+              currentFindDecorations = DecorationSet.create(view.state.doc, decorations);
+              // Dispatch a transaction to trigger re-render
+              view.dispatch(view.state.tr.setMeta('find-highlight-refresh', true));
+            });
+          } catch {
+            // ignore
+          }
+        },
+        clearHighlights: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              currentFindDecorations = DecorationSet.empty;
+              view.dispatch(view.state.tr.setMeta('find-highlight-refresh', true));
+            });
+          } catch {
+            // ignore
+          }
+        },
+
+        // ---- Formatting commands ----
+
+        toggleBold: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = toggleMark(view.state.schema.marks.strong);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        toggleItalic: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = toggleMark(view.state.schema.marks.em);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        toggleStrikethrough: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = toggleMark(view.state.schema.marks.strikethrough);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        setHeading: (level: 0 | 1 | 2 | 3 | 4) => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              if (level === 0) {
+                const cmd = setBlockType(view.state.schema.nodes.paragraph);
+                cmd(view.state, view.dispatch);
+              } else {
+                const cmd = setBlockType(view.state.schema.nodes.heading, { level });
+                cmd(view.state, view.dispatch);
+              }
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        toggleBulletList: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = wrapInList(view.state.schema.nodes.bullet_list);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        toggleOrderedList: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = wrapInList(view.state.schema.nodes.ordered_list);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        toggleBlockquote: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = wrapIn(view.state.schema.nodes.blockquote);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        toggleCodeBlock: () => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = setBlockType(view.state.schema.nodes.code_block);
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        insertLink: (url: string, _text?: string) => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const cmd = toggleMark(view.state.schema.marks.link, { href: url });
+              cmd(view.state, view.dispatch);
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
+        insertImage: (src: string, alt?: string) => {
+          const crepe = crepeRef.current;
+          if (!crepe) return;
+          try {
+            crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              const node = view.state.schema.nodes.image.create({ src, alt: alt || '' });
+              view.dispatch(view.state.tr.replaceSelectionWith(node));
+              view.focus();
+            });
+          } catch {
+            // ignore
+          }
+        },
       }),
       [isComposingRef],
     );
@@ -182,21 +482,26 @@ export const MarkdownEditor = forwardRef<EditorController, MarkdownEditorProps>(
       // Override Crepe's buggy toDOM for math_inline (returns a DOM element
       // which ProseMirror's renderSpec doesn't handle). Register a custom
       // node view that renders katex inline math properly.
+      // Also register the find highlight plugin for find & replace.
       crepe.editor.config((ctx) => {
-        ctx.update(editorViewOptionsCtx, (prev) => ({
-          ...prev,
-          nodeViews: {
-            ...(prev as { nodeViews?: Record<string, unknown> })?.nodeViews,
-            math_inline: (node) => {
-              const value = String(node.attrs.value ?? '');
-              const dom = document.createElement('span');
-              dom.dataset.type = 'math_inline';
-              dom.dataset.value = value;
-              katex.render(value, dom, { throwOnError: false });
-              return { dom };
+        ctx.update(editorViewOptionsCtx, (prev) => {
+          const prevAny = prev as { nodeViews?: Record<string, unknown>; plugins?: readonly import('@milkdown/prose/state').Plugin[] };
+          return {
+            ...prevAny,
+            nodeViews: {
+              ...prevAny.nodeViews,
+              math_inline: (node: import('@milkdown/prose/model').Node) => {
+                const value = String(node.attrs.value ?? '');
+                const dom = document.createElement('span');
+                dom.dataset.type = 'math_inline';
+                dom.dataset.value = value;
+                katex.render(value, dom, { throwOnError: false });
+                return { dom };
+              },
             },
-          },
-        }));
+            plugins: [...(prevAny.plugins ?? []), findHighlightPlugin],
+          } as typeof prev;
+        });
       });
 
       crepe

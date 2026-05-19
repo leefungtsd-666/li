@@ -12,6 +12,13 @@ interface ShortcutHandlers {
   onSelectAllRender: () => void;
   onSelectAllSource: () => void;
   onEscape: () => void;
+  // Phase 4
+  onFind?: () => void;
+  onFindReplace?: () => void;
+  onToggleBold?: () => void;
+  onToggleItalic?: () => void;
+  onToggleStrikethrough?: () => void;
+  onToggleFocusMode?: () => void;
 }
 
 interface UseKeyboardShortcutsOptions {
@@ -49,6 +56,26 @@ export function useKeyboardShortcuts({
         [ctrlKey]: true,
         handler: handlers.onSelectAllRender,
       });
+    }
+
+    // Phase 4 shortcuts
+    if (handlers.onFind) {
+      shortcuts.push({ key: 'f', [ctrlKey]: true, handler: handlers.onFind });
+    }
+    if (handlers.onFindReplace) {
+      shortcuts.push({ key: 'h', [ctrlKey]: true, handler: handlers.onFindReplace });
+    }
+    if (handlers.onToggleBold) {
+      shortcuts.push({ key: 'b', [ctrlKey]: true, handler: handlers.onToggleBold });
+    }
+    if (handlers.onToggleItalic) {
+      shortcuts.push({ key: 'i', [ctrlKey]: true, handler: handlers.onToggleItalic });
+    }
+    if (handlers.onToggleStrikethrough) {
+      shortcuts.push({ key: 'x', [ctrlKey]: true, shift: true, handler: handlers.onToggleStrikethrough });
+    }
+    if (handlers.onToggleFocusMode) {
+      shortcuts.push({ key: 'f', [ctrlKey]: true, shift: true, handler: handlers.onToggleFocusMode });
     }
 
     return shortcuts;
